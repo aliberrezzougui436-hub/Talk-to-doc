@@ -1,0 +1,111 @@
+ا
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Audio & Text to PDF Converter | AI Powered</title>
+    <meta name="description" content="Convert any text or recorded voice to high-quality PDF online for free. Fast, easy, and AI-supported document generator.">
+    <meta name="keywords" content="audio to pdf, voice to text, text to pdf, free pdf converter, speech to text pdf">
+    <script src="cloudflare.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; color: #333; text-align: center; }
+        .container { max-width: 600px; background: white; margin: 40px auto; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; font-size: 24px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 150px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; resize: vertical; box-sizing: border-box; font-size: 16px; }
+        .btn-group { margin: 20px 0; display: flex; gap: 10px; justify-content: center; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 15px; transition: 0.3s; }
+        .btn-record { background: #e74c3c; color: white; }
+        .btn-record.recording { background: #27ae60; animation: pulse 1.5s infinite; }
+        .btn-pdf { background: #2980b9; color: white; }
+        button:hover { opacity: 0.9; }
+        #status { margin-top: 15px; font-weight: bold; color: #7f8c8d; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Free Audio & Text to PDF Converter</h1>
+    <p>Enter text or record your voice to generate a PDF document instantly.</p>
+    
+    <textarea id="textInput" placeholder="Type your text here or click 'Record Voice' to dictate..."></textarea>
+    
+    <div class="btn-group">
+        <button id="recordBtn" class="btn-record" onclick="toggleRecording()">🎤 Record Voice</button>
+        <button class="btn-pdf" onclick="generatePDF()">📄 Download PDF</button>
+    </div>
+    
+    <div id="status">Ready</div>
+</div>
+
+<script>
+    let recognition;
+    let isRecording = false;
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event) => {
+            const resultIndex = event.resultIndex;
+            const transcript = event.results[resultIndex][0].transcript;
+            document.getElementById('textInput').value += transcript + ' ';
+        };
+
+        recognition.onerror = (event) => {
+            document.getElementById('status').innerText = "Error: " + event.error;
+            stopRecordingState();
+        };
+
+        recognition.onend = () => { if(isRecording) recognition.start(); };
+    } else {
+        document.getElementById('recordBtn').style.display = 'none';
+        document.getElementById('status').innerText = "Voice recognition not supported in this browser.";
+    }
+
+    function toggleRecording() {
+        if (!recognition) return;
+        if (!isRecording) {
+            recognition.start();
+            isRecording = true;
+            document.getElementById('recordBtn').innerText = "🛑 Stop Recording";
+            document.getElementById('recordBtn').classList.add('recording');
+            document.getElementById('status').innerText = "Listening...";
+        } else {
+            stopRecordingState();
+        }
+    }
+
+    function stopRecordingState() {
+        recognition.stop();
+        isRecording = false;
+        document.getElementById('recordBtn').innerText = "🎤 Record Voice";
+        document.getElementById('recordBtn').classList.remove('recording');
+        document.getElementById('status').innerText = "Voice added.";
+    }
+
+    function generatePDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const text = document.getElementById('textInput').value;
+        
+        if(!text.trim()) {
+            alert("Please enter text or record audio first!");
+            return;
+        }
+
+        document.getElementById('status').innerText = "Generating PDF...";
+        const splitText = doc.splitTextToSize(text, 180);
+        doc.text(splitText, 10, 20);
+        doc.save('converted-document.pdf');
+        document.getElementById('status').innerText = "PDF Downloaded!";
+    }
+</script>
+
+</body>
+</html>
